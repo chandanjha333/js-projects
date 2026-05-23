@@ -1,6 +1,8 @@
 import express from "express";
+import path from 'path';
 import { connectToMongoDB } from "./connect.js";
 import { urlRoute } from './routes/url.js';
+import { staticRoute } from "./routes/staticRouter.js";
 import { URL } from './models/url.js';
 
 const app = express();
@@ -9,8 +11,14 @@ const PORT = 8001;
 connectToMongoDB('mongodb://localhost:27017/short-url')
 .then(() => console.log("MongoDB connecteed!"));
 
+app.set("view engine", "ejs");
+app.set('views', path.resolve('./views'));
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
 app.use("/url", urlRoute);
+app.use("/", staticRoute);
 
 app.get('/:shortId', async (req, res) => {
   const shortId = req.params.shortId;
@@ -24,6 +32,12 @@ app.get('/:shortId', async (req, res) => {
       },
     },
   });
+  console.log(entry.redirectURL);
+
+  if (!entry) {
+    return res.status(404).send('URL not found');
+  }
+
   res.redirect(entry.redirectURL);
 });
 

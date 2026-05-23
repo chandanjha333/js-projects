@@ -12,7 +12,9 @@ export async function handleGenerateNewShortURL(req, res) {
     visitHistory: []
   });
 
-  return res.json({ id: shortID });
+  return res.render('home', {
+    id: shortID,
+  });
 }
 
 export async function handleGetAnalytics(req, res) {
