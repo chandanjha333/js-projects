@@ -1,9 +1,13 @@
 import express from "express";
 import path from 'path';
+import cookieParser from "cookie-parser";
 import { connectToMongoDB } from "./connect.js";
+import { URL } from './models/url.js';
+import { restrictToLoggedinUserOnly } from './middlewares/auth.js';
+
 import { urlRoute } from './routes/url.js';
 import { staticRoute } from "./routes/staticRouter.js";
-import { URL } from './models/url.js';
+import { userRouter } from "./routes/user.js";
 
 const app = express();
 const PORT = 8001;
@@ -16,8 +20,10 @@ app.set('views', path.resolve('./views'));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
-app.use("/url", urlRoute);
+app.use("/url", restrictToLoggedinUserOnly, urlRoute);
+app.use("/user", userRouter);
 app.use("/", staticRoute);
 
 app.get('/:shortId', async (req, res) => {
@@ -32,7 +38,6 @@ app.get('/:shortId', async (req, res) => {
       },
     },
   });
-  console.log(entry.redirectURL);
 
   if (!entry) {
     return res.status(404).send('URL not found');
