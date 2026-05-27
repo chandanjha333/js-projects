@@ -3,7 +3,7 @@ import path from 'path';
 import cookieParser from "cookie-parser";
 import { connectToMongoDB } from "./connect.js";
 import { URL } from './models/url.js';
-import { restrictToLoggedinUserOnly, checkAuth } from './middlewares/auth.js';
+import { checkForAuthentication, restrictTo } from './middlewares/auth.js';
 
 import { urlRoute } from './routes/url.js';
 import { staticRoute } from "./routes/staticRouter.js";
@@ -21,10 +21,11 @@ app.set('views', path.resolve('./views'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(checkForAuthentication);
 
-app.use("/url", restrictToLoggedinUserOnly, urlRoute);
+app.use("/url", restrictTo(["NORMAL"]), urlRoute);
 app.use("/user", userRouter);
-app.use("/", checkAuth, staticRoute);
+app.use("/", staticRoute);
 
 app.get('/:shortId', async (req, res) => {
   const shortId = req.params.shortId;
